@@ -1,75 +1,153 @@
 package mingmin.rb;
 
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Rainbow {
 
 	private String[] words;
 	private int rounds;
 	private HashMap<String, String> hashMap;
+	private List<String> rWords;
+	private static HashMap<String, Integer> reduceWords;
 	private static int index = 0;
-	public Rainbow(){
-		 words = new String[16777216];
-		 for(int i = 0; i < words.length; i++){
-			 words[i] = padZeros( Integer.toHexString(i)); 
-		 }
-		 hashMap = new HashMap<String, String>();
+
+	public Rainbow() {
+		reduceWords = new HashMap<String, Integer>();
+		words = new String[16777216];
+		for (int i = 0; i < words.length; i++) {
+			words[i] = padZeros(Integer.toHexString(i));
+			reduceWords.put(words[i], 0);
+		}
+		hashMap = new HashMap<String, String>();
+		
 	}
-	
-	public Rainbow(int rounds){
+
+	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
+		this.rWords = new ArrayList<String>(16000000 / rounds);
 	}
-	
-	public static void main(String args[]){
+
+	public static void main(String args[]) {
 		int rounds = Integer.parseInt(args[0]);
 		Rainbow rb = new Rainbow(rounds);
 		rb.buildTable();
 	}
-	
-	private String padZeros(String input){
+
+	private static String padZeros(String input) {
 		String result = input;
-		while(result.length() < 6){
+		while (result.length() < 6) {
 			result = "0" + result;
 		}
 		return result;
 	}
-	
-	private String getNextWord(){
+
+	private String getNextWord() {
+		if (index >= words.length) {
+			return null;
+		}
+		String result;
+		do {
+			result = words[index++];
+		} while (rWords.contains(result));
 		return words[index++];
 	}
-	
-	void buildTable(){
+
+	void buildTable() {
 		try {
-			System.out.println(words[0]);
-			System.out.println(sha1(words[0]));
 			String input = getNextWord();
-			for(int i = 0; i < rounds; i++){
+			do {
+				String chainStart = input;
+				for (int i = 0; i < rounds - 1; i++) {
+					String output = sha1(input);
+					input = reduce(output, i);
+				}
 				String output = sha1(input);
-				input = reduce(output, i);
+				if (rWords.contains(output)) {
+					System.out.println("Collsion: " + output);
+					input = getNextWord();
+					if (input == null) {
+						break;
+					}
+					continue;
+				}
+				rWords.add(output);
+				hashMap.put(chainStart, output);
+				System.out.println(rWords.size() + " chains generated: " + output);
+				if (rWords.size() >= 16000000 / rounds) {
+					break;
+				}
+			} while (true);
+
+			// write to file
+			Set set = hashMap.entrySet();
+			Iterator i = set.iterator();
+			try (PrintWriter writer = new PrintWriter("rainbowTable.txt", "UTF-8")) {
+				while (i.hasNext()) {
+					Map.Entry me = (Map.Entry) i.next();
+
+					writer.print(me.getKey());
+					writer.print(",");
+					writer.println(me.getValue());
+				}
+				writer.close();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			
+
+			set = reduceWords.entrySet();
+			i = set.iterator();
+			try (PrintWriter writer = new PrintWriter("reducedWords.txt", "UTF-8")) {
+				while (i.hasNext()) {
+					Map.Entry me = (Map.Entry) i.next();
+
+					writer.print(me.getKey());
+					writer.print(",");
+					writer.println(me.getValue());
+				}
+				writer.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-	static String reduce(String input, int round){
+
+	static String reduce(String input, int round) {
 		String result = input;
-		return result.substring(round % 35, (round%35)+6);
+		result = result.substring(round % 35, (round % 35) + 6);
+		long resultInLong = Long.parseLong(result, 16);
+		resultInLong = (resultInLong + round * round) % 16777216;
+		result = Long.toHexString(resultInLong);
+		result = padZeros(result);
+		if (reduceWords.containsKey(result)) {
+			int count = reduceWords.get(result) + 1;
+			reduceWords.put(result, count);
+		} else {
+			reduceWords.put(result, 1);
+		}
+		return result;
 	}
-	
+
 	static String sha1(String input) throws NoSuchAlgorithmException {
-        MessageDigest mDigest = MessageDigest.getInstance("SHA1");
-        byte[] result = mDigest.digest(input.getBytes());
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < result.length; i++) {
-            sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
-        }
-         
-        return sb.toString();
-    }
+		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+		byte[] result = mDigest.digest(input.getBytes());
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < result.length; i++) {
+			sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
+		}
+
+		return sb.toString();
+	}
 }
