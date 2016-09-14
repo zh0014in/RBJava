@@ -120,12 +120,12 @@ public class Rainbow {
 		resultInLong = (resultInLong + round * round * round) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
-		if (reduceWords.containsKey(result)) {
-			int count = reduceWords.get(result) + 1;
-			reduceWords.put(result, count);
-		} else {
-			reduceWords.put(result, 1);
-		}
+//		if (reduceWords.containsKey(result)) {
+//			int count = reduceWords.get(result) + 1;
+//			reduceWords.put(result, count);
+//		} else {
+//			reduceWords.put(result, 1);
+//		}
 		return result;
 	}
 

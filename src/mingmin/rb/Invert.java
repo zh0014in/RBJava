@@ -37,43 +37,46 @@ public class Invert {
 
 	private void decode() {
 		try {
-			for (String input : inputs) {
-				String digest = input.toLowerCase();
+			int totalFound = 0;
+			int totalNotFound = 0;
+			int totalSha = 0;
+			for (String in : inputs) {
+				String digest = in.toLowerCase();
 				
 				int i;
-				
+//				System.out.println("start: " + digest);
+				boolean found = false;
 				for (int round = rounds - 1; round >= 0; round--) {
-					String output = digest.toLowerCase();
-					for (i = round; i < rounds - 1; i++) {
-						input = Rainbow.reduce(output, i);
+					String output = digest;
+					for (i = round; i < rounds-1; i++) {
+						String input = Rainbow.reduce(output, i);
 						output = Rainbow.sha1(input);
+						totalSha++;
 					}
 					if (hashMap.containsKey(output)) {
-						//System.out.println("match found");
 						String chainStart = hashMap.get(output);
-						input = chainStart;
-						
-//						for(i = 0; i < rounds; i++){
-//							String o = Rainbow.sha1(input);
-//							input = Rainbow.reduce(o, i);
-//							System.out.println(input + ", " + o);
-//						}
-//						System.out.println("");
-						
-						for (i = 0; i < round+1; i++) {
-							output = Rainbow.sha1(input);
-							if (output.equals(digest)) {
-								System.out.println("word found: " + input + ": " + digest);
-							}
-							input = Rainbow.reduce(output, i);
+						String input = chainStart;
+						for (i = 0; i < round; i++) {
+							String d = Rainbow.sha1(input);
+							totalSha++;
+							input = Rainbow.reduce(d, i);
 						}
-						output = Rainbow.sha1(input);
-						if (output.equals(digest)) {
-							System.out.println("word found: " + input + ": " + digest);
+						String result = Rainbow.sha1(input);
+						if (result.equals(digest)) {
+//							System.out.println("word found: " + input + ": " + digest);
+							totalFound++;
+							found = true;
+							break;
 						}
 					}
 				}
+				if(!found){
+					totalNotFound++;
+				}
 			}
+			
+			System.out.println("Accuracy C is " + totalFound/5000);
+			System.out.println("Speed up factor F is " + 5000/totalSha * 8388608);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -96,12 +99,13 @@ public class Invert {
 	}
 
 	private void readInput() {
-		try (BufferedReader br = new BufferedReader(new FileReader("SAMPLE_INPUT.data.txt"))) {
+		try (BufferedReader br = new BufferedReader(new FileReader("input.txt"))) {
 
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				sCurrentLine = sCurrentLine.replace(" ", "").trim();
+				String[] line = sCurrentLine.split(",");
+				sCurrentLine = line[1].replace(" ", "").trim();
 				inputs.add(sCurrentLine);
 			}
 
