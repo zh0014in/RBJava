@@ -17,6 +17,7 @@ public class Rainbow {
 	private int rounds;
 	private HashMap<String, String> hashMap;
 	private List<String> rWords;
+	private int chainCount;
 	private static HashMap<String, Integer> reduceWords;
 	private static int index = 0;
 
@@ -28,13 +29,13 @@ public class Rainbow {
 			reduceWords.put(words[i], 0);
 		}
 		hashMap = new HashMap<String, String>();
-		
 	}
 
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		this.rWords = new ArrayList<String>(1000000 / rounds);
+		this.chainCount = 20000000 / rounds;
+		this.rWords = new ArrayList<String>(chainCount);
 	}
 
 	public static void main(String args[]) {
@@ -83,7 +84,7 @@ public class Rainbow {
 				rWords.add(output);
 				hashMap.put(chainStart, output);
 				//System.out.println(rWords.size() + " chains generated: " + output);
-				if (rWords.size() >= 16000000 / rounds) {
+				if (rWords.size() >= chainCount) {
 					break;
 				}
 			} while (true);
