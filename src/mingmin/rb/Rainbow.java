@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +34,7 @@ public class Rainbow {
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		this.rWords = new ArrayList<String>(16000000 / rounds);
+		this.rWords = new ArrayList<String>(1000000 / rounds);
 	}
 
 	public static void main(String args[]) {
@@ -72,7 +73,7 @@ public class Rainbow {
 				}
 				String output = sha1(input);
 				if (rWords.contains(output)) {
-					System.out.println("Collsion: " + output);
+					//System.out.println("Collsion: " + output);
 					input = getNextWord();
 					if (input == null) {
 						break;
@@ -81,7 +82,7 @@ public class Rainbow {
 				}
 				rWords.add(output);
 				hashMap.put(chainStart, output);
-				System.out.println(rWords.size() + " chains generated: " + output);
+				//System.out.println(rWords.size() + " chains generated: " + output);
 				if (rWords.size() >= 16000000 / rounds) {
 					break;
 				}
@@ -102,22 +103,9 @@ public class Rainbow {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			set = reduceWords.entrySet();
-			i = set.iterator();
-			try (PrintWriter writer = new PrintWriter("reducedWords.txt", "UTF-8")) {
-				while (i.hasNext()) {
-					Map.Entry me = (Map.Entry) i.next();
-
-					writer.print(me.getKey());
-					writer.print(",");
-					writer.println(me.getValue());
-				}
-				writer.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
+			int zeroCount = Collections.frequency(new ArrayList<Integer>(reduceWords.values()), 0);
+			int totalCount = reduceWords.size();
+			System.out.println(zeroCount + " / " + totalCount + " = " + zeroCount*100/totalCount + " %");
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -128,7 +116,7 @@ public class Rainbow {
 		String result = input;
 		result = result.substring(round % 35, (round % 35) + 6);
 		long resultInLong = Long.parseLong(result, 16);
-		resultInLong = (resultInLong + round * round) % 16777216;
+		resultInLong = (resultInLong + round * round * round) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
 		if (reduceWords.containsKey(result)) {
