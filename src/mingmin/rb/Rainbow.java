@@ -34,14 +34,26 @@ public class Rainbow {
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		this.chainCount = 20000000 / rounds;
-		this.rWords = new ArrayList<String>(chainCount);
+//		this.chainCount = 20000000 / rounds;
+//		this.rWords = new ArrayList<String>(chainCount);
 	}
 
 	public static void main(String args[]) {
 		int rounds = Integer.parseInt(args[0]);
-		Rainbow rb = new Rainbow(rounds);
-		rb.buildTable();
+		int factor = 20000000;
+		long percentage = 100;
+		do {
+			Rainbow rb = new Rainbow(rounds);
+			rb.chainCount = factor / rounds;
+			rb.rWords = new ArrayList<String>(rb.chainCount);
+			System.out.println("building with chain count: " + rb.chainCount);
+			long p = rb.buildTable();
+			if(p > percentage){
+				break;
+			}
+			percentage = p;
+			factor -= 100000;
+		} while (true);
 	}
 
 	private static String padZeros(String input) {
@@ -63,7 +75,7 @@ public class Rainbow {
 		return words[index++];
 	}
 
-	void buildTable() {
+	long buildTable() {
 		try {
 			String input = getNextWord();
 			do {
@@ -74,7 +86,7 @@ public class Rainbow {
 				}
 				String output = sha1(input);
 				if (rWords.contains(output)) {
-					//System.out.println("Collsion: " + output);
+					// System.out.println("Collsion: " + output);
 					input = getNextWord();
 					if (input == null) {
 						break;
@@ -83,7 +95,8 @@ public class Rainbow {
 				}
 				rWords.add(output);
 				hashMap.put(chainStart, output);
-				//System.out.println(rWords.size() + " chains generated: " + output);
+				// System.out.println(rWords.size() + " chains generated: " +
+				// output);
 				if (rWords.size() >= chainCount) {
 					break;
 				}
@@ -106,11 +119,13 @@ public class Rainbow {
 			}
 			int zeroCount = Collections.frequency(new ArrayList<Integer>(reduceWords.values()), 0);
 			int totalCount = reduceWords.size();
-			System.out.println(zeroCount + " / " + totalCount + " = " + zeroCount*100/totalCount + " %");
+			System.out.println(zeroCount + " / " + totalCount + " = " + zeroCount * 100 / totalCount + " %");
+			return (long) zeroCount * (long) 100.0 / (long) totalCount;
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return (long) 0.0;
 	}
 
 	static String reduce(String input, int round) {
@@ -120,12 +135,12 @@ public class Rainbow {
 		resultInLong = (resultInLong + round * round * round) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
-//		if (reduceWords.containsKey(result)) {
-//			int count = reduceWords.get(result) + 1;
-//			reduceWords.put(result, count);
-//		} else {
-//			reduceWords.put(result, 1);
-//		}
+		if (reduceWords.containsKey(result)) {
+			int count = reduceWords.get(result) + 1;
+			reduceWords.put(result, count);
+		} else {
+			reduceWords.put(result, 1);
+		}
 		return result;
 	}
 
