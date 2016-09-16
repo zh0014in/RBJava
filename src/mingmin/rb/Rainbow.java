@@ -22,11 +22,11 @@ public class Rainbow {
 	private static int index = 0;
 
 	public Rainbow() {
-		reduceWords = new HashMap<String, Integer>();
+		//reduceWords = new HashMap<String, Integer>();
 		words = new String[16777216];
 		for (int i = 0; i < words.length; i++) {
 			words[i] = padZeros(Integer.toHexString(i));
-			reduceWords.put(words[i], 0);
+			//reduceWords.put(words[i], 0);
 		}
 		hashMap = new HashMap<String, String>();
 	}
@@ -34,25 +34,25 @@ public class Rainbow {
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-//		this.chainCount = 20000000 / rounds;
-//		this.rWords = new ArrayList<String>(chainCount);
+		// this.chainCount = 20000000 / rounds;
+		// this.rWords = new ArrayList<String>(chainCount);
 	}
 
 	public static void main(String args[]) {
 		int rounds = Integer.parseInt(args[0]);
-		int factor = 20000000;
+		int factor = 10000000;
 		long percentage = 100;
+		Rainbow rb = new Rainbow(rounds);
 		do {
-			Rainbow rb = new Rainbow(rounds);
 			rb.chainCount = factor / rounds;
 			rb.rWords = new ArrayList<String>(rb.chainCount);
 			System.out.println("building with chain count: " + rb.chainCount);
 			long p = rb.buildTable();
-			if(p > percentage){
+			if (p > percentage) {
 				break;
 			}
 			percentage = p;
-			factor -= 100000;
+			factor += 500000;
 		} while (true);
 	}
 
@@ -77,12 +77,26 @@ public class Rainbow {
 
 	long buildTable() {
 		try {
+			reduceWords = new HashMap<String, Integer>();
+			for (int i = 0; i < words.length; i++) {
+				reduceWords.put(words[i], 0);
+			}
 			String input = getNextWord();
 			do {
 				String chainStart = input;
 				for (int i = 0; i < rounds - 1; i++) {
 					String output = sha1(input);
-					input = reduce(output, i);
+					if (i % 2 == 0) {
+						input = reduceB(output, i);
+					} else {
+						input = reduceA(output, i);
+					}
+					if (reduceWords.containsKey(input)) {
+						int count = reduceWords.get(input) + 1;
+						reduceWords.put(input, count);
+					} else {
+						reduceWords.put(input, 1);
+					}
 				}
 				String output = sha1(input);
 				if (rWords.contains(output)) {
@@ -119,7 +133,8 @@ public class Rainbow {
 			}
 			int zeroCount = Collections.frequency(new ArrayList<Integer>(reduceWords.values()), 0);
 			int totalCount = reduceWords.size();
-			System.out.println(zeroCount + " / " + totalCount + " = " + zeroCount * 100 / totalCount + " %");
+			System.out.print(zeroCount + " / " + totalCount + " = " + zeroCount * 100 / totalCount + " %");
+			System.out.println(", valid words take " + (totalCount - zeroCount) * 100/this.chainCount/this.rounds + " %" );
 			return (long) zeroCount * (long) 100.0 / (long) totalCount;
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -128,19 +143,24 @@ public class Rainbow {
 		return (long) 0.0;
 	}
 
-	static String reduce(String input, int round) {
+	static String reduceA(String input, int round) {
 		String result = input;
 		result = result.substring(round % 35, (round % 35) + 6);
 		long resultInLong = Long.parseLong(result, 16);
 		resultInLong = (resultInLong + round * round * round) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
-		if (reduceWords.containsKey(result)) {
-			int count = reduceWords.get(result) + 1;
-			reduceWords.put(result, count);
-		} else {
-			reduceWords.put(result, 1);
-		}
+		return result;
+	}
+
+	static String reduceB(String input, int round) {
+		String result = input;
+		result = result.substring(round % 35, (round % 35) + 6);
+		long resultInLong = Long.parseLong(result, 16);
+		resultInLong = (resultInLong + round * 251) % 16777216;
+		result = Long.toHexString(resultInLong);
+		result = padZeros(result);
+
 		return result;
 	}
 

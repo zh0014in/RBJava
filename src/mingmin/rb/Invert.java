@@ -49,7 +49,7 @@ public class Invert {
 				for (int round = rounds - 1; round >= 0; round--) {
 					String output = digest;
 					for (i = round; i < rounds-1; i++) {
-						String input = Rainbow.reduce(output, i);
+						String input = Rainbow.reduceA(output, i);
 						output = Rainbow.sha1(input);
 						totalSha++;
 					}
@@ -59,7 +59,7 @@ public class Invert {
 						for (i = 0; i < round; i++) {
 							String d = Rainbow.sha1(input);
 							totalSha++;
-							input = Rainbow.reduce(d, i);
+							input = Rainbow.reduceA(d, i);
 						}
 						String result = Rainbow.sha1(input);
 						if (result.equals(digest)) {

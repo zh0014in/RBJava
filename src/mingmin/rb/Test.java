@@ -10,7 +10,7 @@ public class Test {
 			for(int i = 0; i < 499;i++){
 				String o = Rainbow.sha1(input);
 				System.out.println(o);
-				input = Rainbow.reduce(o, i);
+				input = Rainbow.reduceA(o, i);
 			}
 			System.out.println(Rainbow.sha1(input));
 		} catch (NoSuchAlgorithmException e) {
