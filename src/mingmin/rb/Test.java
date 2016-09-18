@@ -11,6 +11,9 @@ public class Test {
 		try {
 			
 			System.out.println(Arrays.toString(Rainbow.hexStringToByteArray(input)));
+			
+			long l = 16777216;
+			System.out.println(Long.toHexString(l));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -29,7 +29,7 @@ public class Invert implements InvertEventListener {
 
 	public static void main(String args[]) {
 		// int rounds = Integer.parseInt(args[0]);
-		Invert i = new Invert(1000);
+		Invert i = new Invert(2000);
 		i.start();
 	}
 
