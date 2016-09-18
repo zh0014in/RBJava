@@ -1,19 +1,17 @@
 package mingmin.rb;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class Test {
 
 	public static void main(String args[]){
-		String input = "0c5fc0";
+//		byte[] input = {0x00,0x01,0x02};
+		String input = "000102";
 		try {
-			for(int i = 0; i < 499;i++){
-				String o = Rainbow.sha1(input);
-				System.out.println(o);
-				input = Rainbow.reduceA(o, i);
-			}
-			System.out.println(Rainbow.sha1(input));
-		} catch (NoSuchAlgorithmException e) {
+			
+			System.out.println(Arrays.toString(Rainbow.hexStringToByteArray(input)));
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
