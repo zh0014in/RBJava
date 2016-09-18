@@ -29,7 +29,7 @@ public class Invert implements InvertEventListener {
 
 	public static void main(String args[]) {
 		// int rounds = Integer.parseInt(args[0]);
-		Invert i = new Invert(2000);
+		Invert i = new Invert(500);
 		i.start();
 	}
 
@@ -41,8 +41,9 @@ public class Invert implements InvertEventListener {
 
 	private void decode() {
 		try {
+			int taskPerThread = 20;
 			for (int i = 0; i < 10; i++) {
-				InvertThread it = new InvertThread(inputs.subList(i * 500, i * 500 + 500));
+				InvertThread it = new InvertThread(inputs.subList(i * taskPerThread, i * taskPerThread + taskPerThread));
 				it.setInvertEventListener(this);
 				it.start();
 			}
@@ -114,45 +115,44 @@ public class Invert implements InvertEventListener {
 
 		public void run() {
 			long threadId = Thread.currentThread().getId();
-			System.out.println("invert for " + inputs.size() + " records in thread "+  threadId);
+			System.out.println("invert for " + input.size() + " records in thread "+  threadId);
+			int[] adjustments = {2,3};
 			for (String in : this.input) {
 				try {
 					String digest = in.toLowerCase();
 					int i;
 					boolean found = false;
-					int tableIndex = 0;
-					do {
+					for(int j = 0; j < adjustments.length; j++){
+						int adjustment = adjustments[j];
 						for (int round = rounds - 1; round >= 0; round--) {
 							String output = digest;
 							for (i = round; i < rounds - 1; i++) {
-								String input = "";
-								if (tableIndex == 0) {
-									input = Rainbow.reduceA(output, i);
-								} else if (tableIndex == 1) {
-									input = Rainbow.reduceB(output, i);
-								}
+								String input = Rainbow.reduceC(output, i, adjustment);
 								output = Rainbow.sha1(input);
 								totalSha++;
 							}
+							output = output.substring(0, 6);
 							if (rainbowTable.containsKey(output)) {
 								String chainStart = rainbowTable.get(output);
 								String input = chainStart;
+								
 								for (i = 0; i < round; i++) {
 									String d = Rainbow.sha1(input);
 									totalSha++;
-									input = Rainbow.reduceA(d, i);
+									input = Rainbow.reduceC(d, i,adjustment);
 								}
 								String result = Rainbow.sha1(input);
 								if (result.equals(digest)) {
-									System.out.println("word found: " + input + ": " + digest + " in thread " + threadId);
-									totalFound++;
+									System.out.println("word found: " + input + ": " + digest + ", " + ++totalFound + " in thread " + threadId);
 									found = true;
 									break;
 								}
 							}
 						}
-						tableIndex++;
-					} while (tableIndex < 2);
+						if(found){
+							break;
+						}
+					}
 					if (!found) {
 						System.out.println("word not found: " + digest + " in thread " + threadId);
 						totalNotFound++;
