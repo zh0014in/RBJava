@@ -16,11 +16,12 @@ import java.util.TreeMap;
 public class Rainbow {
 
 	private String[] words;
+	private List<String> chainHeads;
 	private int rounds;
 	private HashMap<String, String> hashMap;
-	private List<String> rWords;
+	private List<String> chainTails;
 	private int chainCount;
-	private static HashSet<String> lWords;
+	private static HashSet<String> uniqueWords;
 	private static int index = 0;
 	private static int indexReverse;
 
@@ -31,6 +32,7 @@ public class Rainbow {
 		}
 		indexReverse = words.length - 1;
 		hashMap = new HashMap<String, String>();
+		chainHeads = new ArrayList<String>();
 	}
 
 	public Rainbow(int rounds) {
@@ -41,13 +43,13 @@ public class Rainbow {
 	}
 
 	public static void main(String args[]) {
-		int rounds = 300;
-		int factor = 10000000;
+		int rounds = 1000;
+		int factor = 15000000;
 		long percentage = 0;
 		Rainbow rb = new Rainbow(rounds);
 		do {
 			rb.chainCount = factor / rounds;
-			rb.rWords = new ArrayList<String>(rb.chainCount);
+			rb.chainTails = new ArrayList<String>(rb.chainCount);
 			System.out.println("building with chain count: " + rb.chainCount);
 			long p = rb.buildTable();
 			if (p < percentage) {
@@ -73,36 +75,25 @@ public class Rainbow {
 		String result;
 		do {
 			result = words[index++];
-		} while (rWords.contains(result));
+		} while (chainHeads.contains(result));
 		String nextWord = result;
-		if (!lWords.contains(nextWord)) {
-			lWords.add(nextWord);
-		}
-		return nextWord;
-	}
-
-	private String getNextWordReverse() {
-		if (indexReverse < 0) {
-			return null;
-		}
-		String result;
-		do {
-			result = words[indexReverse--];
-		} while (rWords.contains(result));
-		String nextWord = result;
-		if (!lWords.contains(nextWord)) {
-			lWords.add(nextWord);
+		if (!uniqueWords.contains(nextWord)) {
+			uniqueWords.add(nextWord);
 		}
 		return nextWord;
 	}
 
 	long buildTable() {
 		try {
-			lWords = new HashSet<String>();
+			uniqueWords = new HashSet<String>();
 			String input = getNextWord();
 			int tableCount = 0;
 			do {
 				String chainStart = input;
+				if(chainHeads.contains(input)){
+					System.out.println("wasted: " + input);
+				}
+				chainHeads.add(input);
 				for (int i = 0; i < rounds - 1; i++) {
 					String output = sha1(input);
 					if (tableCount == 0) {
@@ -110,28 +101,28 @@ public class Rainbow {
 					} else if (tableCount == 1) {
 						input = reduceB(output, i);
 					}
-					if (!lWords.contains(input)) {
-						lWords.add(input);
-						if (lWords.size() % 10000 == 0) {
-							printResult();
+					if (!uniqueWords.contains(input)) {
+						uniqueWords.add(input);
+						if (uniqueWords.size() % 50000 == 0) {
+							printResult(tableCount);
 						}
 					}
 				}
 				String output = sha1(input);
-				if (rWords.contains(output)) {
-					// System.out.println("Collsion: " + input + ", " + output);
+				if (chainHeads.contains(input)) {
+//					 System.out.println("Collsion: " + input + ", " + output);
 					input = getNextWord();
 					if (input == null) {
 						break;
 					}
 					continue;
 				}
-				rWords.add(output);
+				chainTails.add(output);
 				hashMap.put(chainStart, output);
-				if (rWords.size() >= chainCount) {
+				if (chainTails.size() >= chainCount * (tableCount+1)) {
 					tableCount++;
 				}
-			} while (tableCount >= 2);
+			} while (tableCount < 2);
 
 			// write to file
 			Set set = hashMap.entrySet();
@@ -152,16 +143,17 @@ public class Rainbow {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		printResult();
+//		printResult();
 		return (long) 0.0;
 	}
 
-	void printResult() {
-		int nonZeroCount = lWords.size();
+	void printResult(int tableCount) {
+		int nonZeroCount = uniqueWords.size();
 		int totalCount = words.length;
-		System.out.print(rWords.size() + " chains, ");
+		System.out.print("Table " + tableCount + ", ");
+		System.out.print(chainTails.size() + " chains, ");
 		System.out.print(nonZeroCount + " / " + totalCount + " = " + nonZeroCount * 100 / totalCount + " %");
-		System.out.println(" valid words take " + nonZeroCount * 100 / this.chainCount / this.rounds + " %");
+		System.out.println(" valid words take " + nonZeroCount * 100 / chainTails.size() / this.rounds + " %");
 	}
 
 	static String reduceA(String input, int round) {

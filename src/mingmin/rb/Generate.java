@@ -44,7 +44,7 @@ public class Generate {
 				System.out.print(word + ", ");
 				String result = Rainbow.sha1(word);
 				System.out.println(result);
-				digests[i] = word + "," + result;
+				digests[i] = result;
 			}
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block

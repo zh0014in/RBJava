@@ -24,8 +24,8 @@ public class Invert {
 	}
 
 	public static void main(String args[]) {
-		int rounds = Integer.parseInt(args[0]);
-		Invert i = new Invert(rounds);
+//		int rounds = Integer.parseInt(args[0]);
+		Invert i = new Invert(1000);
 		i.start();
 	}
 
@@ -66,6 +66,7 @@ public class Invert {
 //							System.out.println("word found: " + input + ": " + digest);
 							totalFound++;
 							found = true;
+							System.out.println(totalFound);
 							break;
 						}
 					}
@@ -104,9 +105,10 @@ public class Invert {
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				String[] line = sCurrentLine.split(",");
-				sCurrentLine = line[1].replace(" ", "").trim();
+				//String[] line = sCurrentLine.split(",");
+				sCurrentLine = sCurrentLine.replace(" ", "").trim().toLowerCase();
 				inputs.add(sCurrentLine);
+				System.out.println(sCurrentLine);
 			}
 
 		} catch (Exception e) {
