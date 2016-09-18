@@ -14,6 +14,9 @@ public class Test {
 			
 			long l = 16777216;
 			System.out.println(Long.toHexString(l));
+			
+			long i = 999;
+			System.out.println(999/100 * 100);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

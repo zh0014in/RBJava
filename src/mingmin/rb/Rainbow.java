@@ -40,8 +40,8 @@ public class Rainbow {
 	}
 
 	public static void main(String args[]) {
-		int rounds = 1300;
-		int factor = 15000000;
+		int rounds = 1000;
+		int factor = 30000000;
 		Rainbow rb = new Rainbow(rounds);
 		rb.chainCount = factor / rounds;
 		rb.buildTable();
@@ -62,7 +62,7 @@ public class Rainbow {
 		String result;
 		do {
 			result = words[index++];
-			if(index % 100000 == 0){
+			if (index % 100000 == 0) {
 				System.out.println(index + " words as head.");
 			}
 		} while (rainbowTable.containsKey(result));
@@ -78,8 +78,9 @@ public class Rainbow {
 		try {
 			uniqueWords = new HashSet<String>();
 			String input = getNextWord();
-			int tableCount = 0;
 			List<String> uniqueWordsInAChain = new ArrayList<String>(rounds);
+			long adjustment = 0;
+			int successiveFailure = 0;
 			do {
 				if (rainbowTable.containsKey(input)) {
 					input = getNextWord();
@@ -91,39 +92,39 @@ public class Rainbow {
 				uniqueWordsInAChain.clear();
 				for (int i = 0; i < rounds - 1; i++) {
 					String output = sha1(input);
-					if (tableCount == 0) {
-						input = reduceA(output, i);
-					} else if (tableCount == 1) {
-						input = reduceB(output, i);
-					}
-					if(!uniqueWords.contains(input))
-					{
+					input = reduceC(output, i, adjustment);
+					if (!uniqueWords.contains(input)) {
 						uniqueWordsInAChain.add(input);
 					}
-//					if (!uniqueWords.contains(input)) {
-//						uniqueWords.add(input);
-//						if (uniqueWords.size() % 50000 == 0) {
-//							printResult(tableCount);
-//						}
-//					}
 				}
-				if(uniqueWordsInAChain.size() <= rounds/2){
-//					System.out.println("chain dropped because unique words not enough");
+				int nonZeroCount = uniqueWords.size();
+				int totalCount = words.length;
+				long minUniqueWordSize = (long)rounds * (long)(totalCount - nonZeroCount) / (long)totalCount / 10 * 10;
+				if(minUniqueWordSize < rounds/3){
+					minUniqueWordSize = rounds/3;
+				}
+				if (uniqueWordsInAChain.size() <= minUniqueWordSize) {
+					if(successiveFailure++ > 10000){
+						adjustment = (adjustment+1)%16777216;
+						successiveFailure = 0;
+					}
+//					System.out.println(uniqueWordsInAChain.size() + ", " + minUniqueWordSize);
 					continue;
 				}
-				//uniqueWords.addAll(uniqueWordsInAChain);
-				for(String word : uniqueWordsInAChain){
+
+				String output = sha1(input);
+				rainbowTable.put(chainStart, output);
+				// uniqueWords.addAll(uniqueWordsInAChain);
+				for (String word : uniqueWordsInAChain) {
 					uniqueWords.add(word);
 					if (uniqueWords.size() % 50000 == 0) {
-						printResult(tableCount);
+						printResult();
 					}
 				}
-				String output = sha1(input);				
-				rainbowTable.put(chainStart, output);
-				if (rainbowTable.size() % chainCount  == 0) {
-					tableCount++;
+				if (rainbowTable.size() % chainCount == 0) {
+					break;
 				}
-			} while (tableCount < 2);
+			} while (true);
 
 			// write to file
 			Set set = rainbowTable.entrySet();
@@ -148,13 +149,13 @@ public class Rainbow {
 		return (long) 0.0;
 	}
 
-	void printResult(int tableCount) {
+	void printResult() {
 		int nonZeroCount = uniqueWords.size();
 		int totalCount = words.length;
-		System.out.print("Table " + tableCount + ", ");
 		System.out.print(rainbowTable.size() + " chains, ");
 		System.out.print(nonZeroCount + " / " + totalCount + " = " + nonZeroCount * 100 / totalCount + " %, ");
-		System.out.println("valid words " + nonZeroCount + " / " + rainbowTable.size() + " / " + this.rounds + " = " + nonZeroCount * 100 / rainbowTable.size() / this.rounds + " %");
+		System.out.println("valid words " + nonZeroCount + " / " + rainbowTable.size() + " / " + this.rounds + " = "
+				+ nonZeroCount * 100 / rainbowTable.size() / this.rounds + " %");
 	}
 
 	static String reduceA(String input, int round) {
@@ -182,12 +183,12 @@ public class Rainbow {
 		}
 		return result;
 	}
-	
-	static String reduceC(String input, int round, int adjustment){
+
+	static String reduceC(String input, int round, long adjustment) {
 		String result = input;
 		result = result.substring(round % 35, (round % 35) + 6);
 		long resultInLong = Long.parseLong(result, 16);
-		resultInLong = Math.abs((resultInLong + round * round * round) + adjustment) % 16777216;
+		resultInLong = Math.abs(resultInLong + adjustment*round) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
 		if (result.length() > 6) {
