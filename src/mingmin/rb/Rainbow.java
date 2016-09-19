@@ -4,8 +4,10 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,7 +44,7 @@ public class Rainbow {
 
 	public static void main(String args[]) {
 		int rounds = 300;
-		int factor = 39300000;
+		int factor = 38000000;
 		Rainbow rb = new Rainbow(rounds);
 		rb.chainCount = factor / rounds;
 		rb.buildTable();
@@ -76,13 +78,15 @@ public class Rainbow {
 
 	long buildTable() {
 		System.out.println("building with chain count: " + chainCount);
+		Date date= new Date();
+		long start =  date.getTime();
 		try {
 			uniqueWords = new HashSet<String>();
 			String input = getNextWord();
 			List<String> uniqueWordsInAChain = new ArrayList<String>(rounds);
 			int successiveFailure = 0;
-			long minUniqueWordSize = rounds * 19 / 20;
-			int[] adjustments = { 2, 3,5 };
+			int minUniqueWordSize = rounds * 19 / 20;
+			int[] adjustments = { 2, 5 };
 			int tableIndex = 0;
 			int adjustment = adjustments[tableIndex];
 			do {
@@ -104,7 +108,7 @@ public class Rainbow {
 
 				if (uniqueWordsInAChain.size() <= minUniqueWordSize) {
 					if (successiveFailure++ >= chainCount) {
-						adjustment = adjustments[++tableIndex % 3];
+						adjustment = adjustments[++tableIndex % 2];
 						// adjustment = (adjustment+1)%35;
 						successiveFailure = 0;
 						System.out.println("change of reduce function " + adjustment);
@@ -123,8 +127,10 @@ public class Rainbow {
 				}
 				int nonZeroCount = uniqueWords.size();
 				int totalCount = words.length;
-				minUniqueWordSize = (long) rounds * (1-(long)nonZeroCount/(long)totalCount) -1;// / 10 * 10;
-				// System.out.println(minUniqueWordSize);
+				minUniqueWordSize = (int) (rounds * (long)(totalCount - nonZeroCount) / (long)totalCount -1);// / 10 * 10;
+						//(int) (rounds - nonZeroCount/totalCount - 5);
+						
+//				 System.out.println(minUniqueWordSize);
 				if (minUniqueWordSize < rounds / 10) {
 					minUniqueWordSize = rounds / 10;
 				}
@@ -132,7 +138,11 @@ public class Rainbow {
 					break;
 				}
 			} while (true);
-
+			
+			date = new Date();
+			long end = date.getTime();
+			System.out.println("tasks ends in " + (end -start) +" ms");
+			
 			// write to file
 			Set set = rainbowTable.entrySet();
 //			Iterator i = set.iterator();
@@ -171,12 +181,14 @@ public class Rainbow {
 	}
 
 	void printResult() {
+		synchronized(uniqueWords){
 		int nonZeroCount = uniqueWords.size();
 		int totalCount = words.length;
 		System.out.print(rainbowTable.size() + " chains, ");
 		System.out.print(nonZeroCount + " / " + totalCount + " = " + nonZeroCount * 100 / totalCount + " %, ");
 		System.out.println("valid words " + nonZeroCount + " / " + rainbowTable.size() + " / " + this.rounds + " = "
 				+ nonZeroCount * 100 / rainbowTable.size() / this.rounds + " %");
+		}
 	}
 
 	static String reduceA(String input, int round) {

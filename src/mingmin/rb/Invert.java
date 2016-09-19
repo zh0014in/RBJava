@@ -45,8 +45,8 @@ public class Invert implements InvertEventListener {
 
 	private void decode() {
 		try {
-			int taskPerThread = 1000;
-			for (int i = 0; i < 5; i++) {
+			int taskPerThread = 200;
+			for (int i = 0; i < 10; i++) {
 				InvertThread it = new InvertThread(inputs.subList(i * taskPerThread, i * taskPerThread + taskPerThread));
 				it.setInvertEventListener(this);
 				it.start();
@@ -133,7 +133,7 @@ public class Invert implements InvertEventListener {
 		public void run() {
 			long threadId = Thread.currentThread().getId();
 			System.out.println("invert for " + input.size() + " records in thread "+  threadId);
-			int[] adjustments = {2,3};
+			int[] adjustments = {2,5};
 			for (String in : this.input) {
 				try {
 					String digest = in.toLowerCase();
@@ -148,7 +148,7 @@ public class Invert implements InvertEventListener {
 								output = Rainbow.sha1(input);
 								totalSha++;
 							}
-							output = output.substring(0, 8);
+//							output = output.substring(0, 8);
 							if (rainbowTable.containsKey(output)) {
 								String chainStart = rainbowTable.get(output);
 								String input = chainStart;
