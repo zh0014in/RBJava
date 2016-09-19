@@ -1,5 +1,6 @@
 package mingmin.rb;
 
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -40,8 +41,8 @@ public class Rainbow {
 	}
 
 	public static void main(String args[]) {
-		int rounds = 500;
-		int factor = 39000000;
+		int rounds = 300;
+		int factor = 39300000;
 		Rainbow rb = new Rainbow(rounds);
 		rb.chainCount = factor / rounds;
 		rb.buildTable();
@@ -80,17 +81,17 @@ public class Rainbow {
 			String input = getNextWord();
 			List<String> uniqueWordsInAChain = new ArrayList<String>(rounds);
 			int successiveFailure = 0;
-			long minUniqueWordSize = rounds * 19/20;
-			int[] adjustments = {2,3};
+			long minUniqueWordSize = rounds * 19 / 20;
+			int[] adjustments = { 2, 3,5 };
 			int tableIndex = 0;
 			int adjustment = adjustments[tableIndex];
 			do {
-				if (rainbowTable.containsKey(input)) {
+//				if (rainbowTable.containsKey(input)) {
 					input = getNextWord();
 					if (input == null) {
 						break;
 					}
-				}
+//				}
 				String chainStart = input;
 				uniqueWordsInAChain.clear();
 				for (int i = 0; i < rounds - 1; i++) {
@@ -100,22 +101,19 @@ public class Rainbow {
 						uniqueWordsInAChain.add(input);
 					}
 				}
-				
+
 				if (uniqueWordsInAChain.size() <= minUniqueWordSize) {
-					if(successiveFailure++ > 10000){
-						adjustment = adjustments[tableIndex++%2];
-//						adjustment = (adjustment+1)%35;
+					if (successiveFailure++ >= chainCount) {
+						adjustment = adjustments[++tableIndex % 3];
+						// adjustment = (adjustment+1)%35;
 						successiveFailure = 0;
 						System.out.println("change of reduce function " + adjustment);
 					}
-//					System.out.print(successiveFailure + ",");
-//					System.out.println(uniqueWordsInAChain.size() + ", " + minUniqueWordSize);
 					continue;
 				}
-//				successiveFailure = 0;
 				String output = sha1(input);
 				rainbowTable.put(chainStart, output);
-				
+
 				// uniqueWords.addAll(uniqueWordsInAChain);
 				for (String word : uniqueWordsInAChain) {
 					uniqueWords.add(word);
@@ -125,10 +123,10 @@ public class Rainbow {
 				}
 				int nonZeroCount = uniqueWords.size();
 				int totalCount = words.length;
-				minUniqueWordSize = (long)rounds * (long)(totalCount - nonZeroCount) / (long)totalCount / 100 * 100;
-//				System.out.println(minUniqueWordSize);
-				if(minUniqueWordSize < rounds/10){
-					minUniqueWordSize = rounds/10;
+				minUniqueWordSize = (long) rounds * (1-(long)nonZeroCount/(long)totalCount) -1;// / 10 * 10;
+				// System.out.println(minUniqueWordSize);
+				if (minUniqueWordSize < rounds / 10) {
+					minUniqueWordSize = rounds / 10;
 				}
 				if (rainbowTable.size() % chainCount == 0) {
 					break;
@@ -137,6 +135,20 @@ public class Rainbow {
 
 			// write to file
 			Set set = rainbowTable.entrySet();
+//			Iterator i = set.iterator();
+//			try (FileOutputStream os = new FileOutputStream("rainbowTable")) {
+//				while (i.hasNext()) {
+//					Map.Entry me = (Map.Entry) i.next();
+//
+//					os.write((hexStringToByteArray((String) me.getKey())));
+//					os.write((hexStringToByteArray(me.getValue().toString().substring(0, 6))));
+//				}
+//				os.close();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+
+			// write to file
 			Iterator i = set.iterator();
 			try (PrintWriter writer = new PrintWriter("rainbowTable.txt", "UTF-8")) {
 				while (i.hasNext()) {
@@ -144,7 +156,7 @@ public class Rainbow {
 
 					writer.print(me.getKey());
 					writer.print(",");
-					writer.println(me.getValue().toString().substring(0, 6));
+					writer.println(me.getValue());
 				}
 				writer.close();
 			} catch (Exception e) {
@@ -195,9 +207,9 @@ public class Rainbow {
 
 	static String reduceC(String input, int round, int adjustment) {
 		String result = input;
-		result = result.substring((adjustment+round) % 35, ((adjustment+round) % 35) + 6);
+		result = result.substring((adjustment + round) % 35, ((adjustment + round) % 35) + 6);
 		long resultInLong = Long.parseLong(result, 16);
-		resultInLong = Math.abs(resultInLong + round*round*round) % 16777216;
+		resultInLong = Math.abs(resultInLong + round * round * round * adjustment) % 16777216;
 		result = Long.toHexString(resultInLong);
 		result = padZeros(result);
 		if (result.length() > 6) {
@@ -209,12 +221,7 @@ public class Rainbow {
 	static String sha1(String input) throws NoSuchAlgorithmException {
 		MessageDigest mDigest = MessageDigest.getInstance("SHA1");
 		byte[] result = mDigest.digest(hexStringToByteArray(input));
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < result.length; i++) {
-			sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
-		}
-
-		return sb.toString();
+		return byteArrayToHexString(result);
 	}
 
 	static byte[] hexStringToByteArray(String s) {
@@ -224,5 +231,13 @@ public class Rainbow {
 			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
 		}
 		return data;
+	}
+
+	static String byteArrayToHexString(byte[] b) {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < b.length; i++) {
+			sb.append(Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1));
+		}
+		return sb.toString();
 	}
 }

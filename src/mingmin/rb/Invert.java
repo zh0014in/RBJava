@@ -2,6 +2,10 @@ package mingmin.rb;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +33,7 @@ public class Invert implements InvertEventListener {
 
 	public static void main(String args[]) {
 		// int rounds = Integer.parseInt(args[0]);
-		Invert i = new Invert(500);
+		Invert i = new Invert(300);
 		i.start();
 	}
 
@@ -41,8 +45,8 @@ public class Invert implements InvertEventListener {
 
 	private void decode() {
 		try {
-			int taskPerThread = 20;
-			for (int i = 0; i < 10; i++) {
+			int taskPerThread = 1000;
+			for (int i = 0; i < 5; i++) {
 				InvertThread it = new InvertThread(inputs.subList(i * taskPerThread, i * taskPerThread + taskPerThread));
 				it.setInvertEventListener(this);
 				it.start();
@@ -65,6 +69,19 @@ public class Invert implements InvertEventListener {
 	}
 
 	private void readTable() {
+//		Path path = Paths.get("rainbowTable");
+//		try {
+//			byte[] data = Files.readAllBytes(path);
+//			for(int i = 0; i < data.length/6; i++){
+//				byte[] head = {data[i],data[i+1],data[i+2]};
+//				byte[] tail = {data[i+3],data[i+4],data[i+5]};
+//				rainbowTable.put(Rainbow.byteArrayToHexString(tail), Rainbow.byteArrayToHexString(head));
+//			}
+//		} catch (IOException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+		
 		try (BufferedReader br = new BufferedReader(new FileReader("rainbowTable.txt"))) {
 
 			String sCurrentLine;
@@ -131,7 +148,7 @@ public class Invert implements InvertEventListener {
 								output = Rainbow.sha1(input);
 								totalSha++;
 							}
-							output = output.substring(0, 6);
+							output = output.substring(0, 8);
 							if (rainbowTable.containsKey(output)) {
 								String chainStart = rainbowTable.get(output);
 								String input = chainStart;

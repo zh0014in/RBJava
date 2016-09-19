@@ -17,6 +17,9 @@ public class Test {
 			
 			long i = 999;
 			System.out.println(999/100 * 100);
+			
+			byte[] x = {0x00,0x56,(byte) 0xff};
+			System.out.println(Rainbow.byteArrayToHexString(x));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
