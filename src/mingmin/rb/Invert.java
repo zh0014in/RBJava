@@ -33,6 +33,8 @@ public class Invert implements InvertEventListener {
 
 	public static void main(String args[]) {
 		// int rounds = Integer.parseInt(args[0]);
+//		Rainbow rb = new Rainbow(300);
+//		rb.buildTable();
 		Invert i = new Invert(300);
 		i.start();
 	}
@@ -69,30 +71,17 @@ public class Invert implements InvertEventListener {
 	}
 
 	private void readTable() {
-//		Path path = Paths.get("rainbowTable");
-//		try {
-//			byte[] data = Files.readAllBytes(path);
-//			for(int i = 0; i < data.length/6; i++){
-//				byte[] head = {data[i],data[i+1],data[i+2]};
-//				byte[] tail = {data[i+3],data[i+4],data[i+5]};
-//				rainbowTable.put(Rainbow.byteArrayToHexString(tail), Rainbow.byteArrayToHexString(head));
-//			}
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-		
-		try (BufferedReader br = new BufferedReader(new FileReader("rainbowTable.txt"))) {
-
-			String sCurrentLine;
-
-			while ((sCurrentLine = br.readLine()) != null) {
-				String[] line = sCurrentLine.split(",");
-				rainbowTable.put(line[1], line[0]);
+		Path path = Paths.get("rainbowTable");
+		try {
+			byte[] data = Files.readAllBytes(path);
+			for(int i = 0; i < data.length; i+=6){
+				byte[] head = {data[i],data[i+1],data[i+2]};
+				byte[] tail = {data[i+3],data[i+4],data[i+5]};
+//				System.out.println(Rainbow.byteArrayToHexString(head) + "," + Rainbow.byteArrayToHexString(tail));
+				rainbowTable.put(Rainbow.byteArrayToHexString(tail), Rainbow.byteArrayToHexString(head));
 			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 	}
 
@@ -130,7 +119,6 @@ public class Invert implements InvertEventListener {
 		}
 
 		public void run() {
-			long threadId = Thread.currentThread().getId();
 			int[] adjustments = {2,5};
 			for (String in : this.input) {
 				try {
@@ -142,11 +130,11 @@ public class Invert implements InvertEventListener {
 						for (int round = rounds - 1; round >= 0; round--) {
 							String output = digest;
 							for (i = round; i < rounds - 1; i++) {
-								String input = Rainbow.reduceC(output, i, adjustment);
+								String input = Rainbow.reduce(output, i, adjustment);
 								output = Rainbow.sha1(input);
 								totalSha++;
 							}
-//							output = output.substring(0, 8);
+							output = output.substring(0, 6);
 							if (rainbowTable.containsKey(output)) {
 								String chainStart = rainbowTable.get(output);
 								String input = chainStart;
@@ -154,7 +142,7 @@ public class Invert implements InvertEventListener {
 								for (i = 0; i < round; i++) {
 									String d = Rainbow.sha1(input);
 									totalSha++;
-									input = Rainbow.reduceC(d, i,adjustment);
+									input = Rainbow.reduce(d, i,adjustment);
 								}
 								String result = Rainbow.sha1(input);
 								if (result.equals(digest)) {
