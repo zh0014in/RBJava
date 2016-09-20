@@ -18,6 +18,8 @@ public class Invert implements InvertEventListener {
 	private int rounds;
 	private int totalFound;
 	private int totalSha1;
+	int taskPerThread = 500;
+	int taskCompleted = 0;
 
 	public Invert() {
 		rainbowTable = new HashMap<String, String>();
@@ -32,24 +34,25 @@ public class Invert implements InvertEventListener {
 	}
 
 	public static void main(String args[]) {
-		// int rounds = Integer.parseInt(args[0]);
-//		Rainbow rb = new Rainbow(300);
-//		rb.buildTable();
+		String fileName = args[0];
+		// Rainbow rb = new Rainbow(300);
+		// rb.buildTable();
 		Invert i = new Invert(300);
-		i.start();
+		i.start(fileName);
 	}
 
-	public void start() {
-		readInput();
+	public void start(String fileName) {
+		readInput(fileName);
 		readTable();
 		decode();
 	}
 
 	private void decode() {
 		try {
-			int taskPerThread = 200;
-			for (int i = 0; i < 10; i++) {
-				InvertThread it = new InvertThread(inputs.subList(i * taskPerThread, i * taskPerThread + taskPerThread));
+
+			for (int i = 0; i < 5000 / taskPerThread; i++) {
+				InvertThread it = new InvertThread(
+						inputs.subList(i * taskPerThread, i * taskPerThread + taskPerThread));
 				it.setInvertEventListener(this);
 				it.start();
 			}
@@ -57,27 +60,27 @@ public class Invert implements InvertEventListener {
 			// System.out.println("Speed up factor F is " + 5000 / totalSha1 *
 			// 8388608);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void onInvertComplete(int totalFound, int totalSha1) {
-		// TODO Auto-generated method stub
 		this.totalFound += totalFound;
 		this.totalSha1 += totalSha1;
-		System.out.println(this.totalFound + ", " + this.totalSha1);
+		if (++taskCompleted >= 5000 / taskPerThread) {
+			System.out.println("The total number of words found is: " + this.totalFound);
+			System.out.println("Total sha1 is: " + this.totalSha1);
+		}
 	}
 
 	private void readTable() {
 		Path path = Paths.get("rainbowTable");
 		try {
 			byte[] data = Files.readAllBytes(path);
-			for(int i = 0; i < data.length; i+=6){
-				byte[] head = {data[i],data[i+1],data[i+2]};
-				byte[] tail = {data[i+3],data[i+4],data[i+5]};
-//				System.out.println(Rainbow.byteArrayToHexString(head) + "," + Rainbow.byteArrayToHexString(tail));
+			for (int i = 0; i < data.length; i += 7) {
+				byte[] head = { data[i], data[i + 1], data[i + 2] };
+				byte[] tail = { data[i + 3], data[i + 4], data[i + 5], data[i + 6] };
 				rainbowTable.put(Rainbow.byteArrayToHexString(tail), Rainbow.byteArrayToHexString(head));
 			}
 		} catch (IOException e1) {
@@ -85,8 +88,8 @@ public class Invert implements InvertEventListener {
 		}
 	}
 
-	private void readInput() {
-		try (BufferedReader br = new BufferedReader(new FileReader("SAMPLE_INPUT.data.txt"))) {
+	private void readInput(String fileName) {
+		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
 
 			String sCurrentLine;
 
@@ -119,13 +122,13 @@ public class Invert implements InvertEventListener {
 		}
 
 		public void run() {
-			int[] adjustments = {2,5};
+			int[] adjustments = { 2, 5 };
 			for (String in : this.input) {
 				try {
 					String digest = in.toLowerCase();
 					int i;
 					boolean found = false;
-					for(int j = 0; j < adjustments.length; j++){
+					for (int j = 0; j < adjustments.length; j++) {
 						int adjustment = adjustments[j];
 						for (int round = rounds - 1; round >= 0; round--) {
 							String output = digest;
@@ -134,15 +137,15 @@ public class Invert implements InvertEventListener {
 								output = Rainbow.sha1(input);
 								totalSha++;
 							}
-							output = output.substring(0, 6);
+							output = output.substring(0, 8);
 							if (rainbowTable.containsKey(output)) {
 								String chainStart = rainbowTable.get(output);
 								String input = chainStart;
-								
+
 								for (i = 0; i < round; i++) {
 									String d = Rainbow.sha1(input);
 									totalSha++;
-									input = Rainbow.reduce(d, i,adjustment);
+									input = Rainbow.reduce(d, i, adjustment);
 								}
 								String result = Rainbow.sha1(input);
 								if (result.equals(digest)) {
@@ -153,7 +156,7 @@ public class Invert implements InvertEventListener {
 								}
 							}
 						}
-						if(found){
+						if (found) {
 							break;
 						}
 					}

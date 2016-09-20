@@ -32,7 +32,7 @@ public class Rainbow {
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		this.chainCount = 38300000 / rounds;
+		this.chainCount = 38500000 / rounds;
 	}
 
 	public static void main(String args[]) {
@@ -135,7 +135,7 @@ public class Rainbow {
 					Map.Entry me = (Map.Entry) i.next();
 
 					os.write((hexStringToByteArray((String) me.getKey())));
-					os.write((hexStringToByteArray(me.getValue().toString().substring(0, 6))));
+					os.write((hexStringToByteArray(me.getValue().toString().substring(0, 8))));
 				}
 				os.close();
 			} catch (Exception e) {
