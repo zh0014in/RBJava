@@ -36,7 +36,7 @@ public class Rainbow {
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		this.chainCount = 38000000 / rounds;
+		this.chainCount = 38300000 / rounds;
 	}
 
 	public static void main(String args[]) {
@@ -120,10 +120,9 @@ public class Rainbow {
 						printResult();
 					}
 				}
-				int nonZeroCount = uniqueWords.size();
 				int totalCount = words.length;
-				minUniqueWordSize = (int) (rounds * (long) (totalCount - nonZeroCount) / (long) totalCount - 1);
-				// System.out.println(minUniqueWordSize);
+				minUniqueWordSize = (int) (rounds * (long) (totalCount - rainbowTable.size()*rounds/1.279) / (long) totalCount - 1);
+//				 System.out.println(minUniqueWordSize);
 				if (minUniqueWordSize < rounds / 10) {
 					minUniqueWordSize = rounds / 10;
 				}
