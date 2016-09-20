@@ -20,33 +20,28 @@ public class Rainbow {
 
 	private String[] words;
 	private int rounds;
-	private HashMap<String, String> rainbowTable;
+	private TreeMap<String, String> rainbowTable;
 	private int chainCount;
 	private static HashSet<String> uniqueWords;
 	private static int index = 0;
-	private static int indexReverse;
 
 	public Rainbow() {
 		words = new String[16777216];
 		for (int i = 0; i < words.length; i++) {
 			words[i] = padZeros(Integer.toHexString(i));
 		}
-		indexReverse = words.length - 1;
-		rainbowTable = new HashMap<String, String>();
+		rainbowTable = new TreeMap<String, String>();
 	}
 
 	public Rainbow(int rounds) {
 		this();
 		this.rounds = rounds;
-		// this.chainCount = 20000000 / rounds;
-		// this.rWords = new ArrayList<String>(chainCount);
+		this.chainCount = 38000000 / rounds;
 	}
 
 	public static void main(String args[]) {
 		int rounds = 300;
-		int factor = 38000000;
 		Rainbow rb = new Rainbow(rounds);
-		rb.chainCount = factor / rounds;
 		rb.buildTable();
 	}
 
@@ -78,8 +73,8 @@ public class Rainbow {
 
 	long buildTable() {
 		System.out.println("building with chain count: " + chainCount);
-		Date date= new Date();
-		long start =  date.getTime();
+		Date date = new Date();
+		long start = date.getTime();
 		try {
 			uniqueWords = new HashSet<String>();
 			String input = getNextWord();
@@ -90,12 +85,12 @@ public class Rainbow {
 			int tableIndex = 0;
 			int adjustment = adjustments[tableIndex];
 			do {
-//				if (rainbowTable.containsKey(input)) {
-					input = getNextWord();
-					if (input == null) {
-						break;
-					}
-//				}
+				// if (rainbowTable.containsKey(input)) {
+				input = getNextWord();
+				if (input == null) {
+					break;
+				}
+				// }
 				String chainStart = input;
 				uniqueWordsInAChain.clear();
 				for (int i = 0; i < rounds - 1; i++) {
@@ -127,10 +122,8 @@ public class Rainbow {
 				}
 				int nonZeroCount = uniqueWords.size();
 				int totalCount = words.length;
-				minUniqueWordSize = (int) (rounds * (long)(totalCount - nonZeroCount) / (long)totalCount -1);// / 10 * 10;
-						//(int) (rounds - nonZeroCount/totalCount - 5);
-						
-//				 System.out.println(minUniqueWordSize);
+				minUniqueWordSize = (int) (rounds * (long) (totalCount - nonZeroCount) / (long) totalCount - 1);
+				// System.out.println(minUniqueWordSize);
 				if (minUniqueWordSize < rounds / 10) {
 					minUniqueWordSize = rounds / 10;
 				}
@@ -138,25 +131,27 @@ public class Rainbow {
 					break;
 				}
 			} while (true);
-			
+
 			date = new Date();
 			long end = date.getTime();
-			System.out.println("tasks ends in " + (end -start) +" ms");
-			
+			System.out.println("tasks ends in " + (end - start) + " ms");
+
 			// write to file
 			Set set = rainbowTable.entrySet();
-//			Iterator i = set.iterator();
-//			try (FileOutputStream os = new FileOutputStream("rainbowTable")) {
-//				while (i.hasNext()) {
-//					Map.Entry me = (Map.Entry) i.next();
-//
-//					os.write((hexStringToByteArray((String) me.getKey())));
-//					os.write((hexStringToByteArray(me.getValue().toString().substring(0, 6))));
-//				}
-//				os.close();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
+			// Iterator i = set.iterator();
+			// try (FileOutputStream os = new FileOutputStream("rainbowTable"))
+			// {
+			// while (i.hasNext()) {
+			// Map.Entry me = (Map.Entry) i.next();
+			//
+			// os.write((hexStringToByteArray((String) me.getKey())));
+			// os.write((hexStringToByteArray(me.getValue().toString().substring(0,
+			// 6))));
+			// }
+			// os.close();
+			// } catch (Exception e) {
+			// e.printStackTrace();
+			// }
 
 			// write to file
 			Iterator i = set.iterator();
@@ -181,14 +176,12 @@ public class Rainbow {
 	}
 
 	void printResult() {
-		synchronized(uniqueWords){
 		int nonZeroCount = uniqueWords.size();
 		int totalCount = words.length;
 		System.out.print(rainbowTable.size() + " chains, ");
 		System.out.print(nonZeroCount + " / " + totalCount + " = " + nonZeroCount * 100 / totalCount + " %, ");
 		System.out.println("valid words " + nonZeroCount + " / " + rainbowTable.size() + " / " + this.rounds + " = "
 				+ nonZeroCount * 100 / rainbowTable.size() / this.rounds + " %");
-		}
 	}
 
 	static String reduceA(String input, int round) {
