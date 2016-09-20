@@ -102,7 +102,6 @@ public class Invert implements InvertEventListener {
 			String sCurrentLine;
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				// String[] line = sCurrentLine.split(",");
 				sCurrentLine = sCurrentLine.replace(" ", "").trim().toLowerCase();
 				inputs.add(sCurrentLine);
 			}
@@ -132,7 +131,6 @@ public class Invert implements InvertEventListener {
 
 		public void run() {
 			long threadId = Thread.currentThread().getId();
-			System.out.println("invert for " + input.size() + " records in thread "+  threadId);
 			int[] adjustments = {2,5};
 			for (String in : this.input) {
 				try {
@@ -160,7 +158,8 @@ public class Invert implements InvertEventListener {
 								}
 								String result = Rainbow.sha1(input);
 								if (result.equals(digest)) {
-									System.out.println("word found: " + input + ": " + digest + ", " + ++totalFound + " in thread " + threadId);
+									System.out.println(input);
+									totalFound++;
 									found = true;
 									break;
 								}
@@ -171,11 +170,10 @@ public class Invert implements InvertEventListener {
 						}
 					}
 					if (!found) {
-						System.out.println("word not found: " + digest + " in thread " + threadId);
+						System.out.println("0");
 						totalNotFound++;
 					}
 				} catch (NoSuchAlgorithmException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

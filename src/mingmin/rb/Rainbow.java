@@ -103,7 +103,7 @@ public class Rainbow {
 
 				if (uniqueWordsInAChain.size() <= minUniqueWordSize) {
 					if (successiveFailure++ >= chainCount) {
-						adjustment = adjustments[++tableIndex % 2];
+						adjustment = adjustments[++tableIndex % adjustments.length];
 						// adjustment = (adjustment+1)%35;
 						successiveFailure = 0;
 						System.out.println("change of reduce function " + adjustment);
@@ -121,7 +121,7 @@ public class Rainbow {
 					}
 				}
 				int totalCount = words.length;
-				minUniqueWordSize = (int) (rounds * (long) (totalCount - rainbowTable.size()*rounds/1.279) / (long) totalCount - 1);
+				minUniqueWordSize = (int) (rounds * (long) (totalCount - rainbowTable.size()*rounds/1.272) / (long) totalCount - 1);
 //				 System.out.println(minUniqueWordSize);
 				if (minUniqueWordSize < rounds / 10) {
 					minUniqueWordSize = rounds / 10;
